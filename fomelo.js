@@ -1,49 +1,61 @@
+/*
+Bangg's Fomelo Bot v1.0.0
+Pulls character information from the game Shards of Dalaya, parses it, and returns a character sheet.
+Primarily to be used with my discord bot.
+
+todo: parse other stats, get relic/archaic spell information, item information, kills, deaths
+*/
 const axios = require('axios').default;
 const cheerio = require('cheerio');
 const fs = require('fs');
-let result;
-let nameMatch = new RegExp("<tr>.+</tr>", "g");
+let infoMatch = new RegExp("<tr>.+</tr>", "g");
 let htmlStrip = new RegExp("<\/?[^>]+(>|$)", "g");
 let guildMatch = new RegExp("&lt;", "g");
-let guildMatchTwo = new RegExp("&gt;", "g");
-let characterResult = [];
-let guilded;
-let resultArray;
 
-const characterSheet = (character) => {
-    characterResult.push(character[0].trim());
-    characterResult.push(character[1].trim());
-    if (character[2].match(guildMatch)) {
-        characterResult.push(character[2].replace(guildMatch, '<').replace(guildMatchTwo, '>').trim());
-        guilded = true;
-    }
-    if (guilded) {
-        characterResult.push(`HP: ${character[3].trim().split(" ")[5]}`);
-        characterResult.push(`AC: ${character[4].trim().split(" ")[4]}`);
-        characterResult.push(`MANA: ${character[5].trim().split(" ")[4]}`);
-    }
-    else {
-        characterResult.push(`HP: ${character[2].trim().split(" ")[3]}`);
-        characterResult.push(`AC: ${character[3].trim().split(" ")[2]}`);
-        characterResult.push(`MANA: ${character[4].trim().split(" ")[2]}`);
-    }
-    console.log(characterResult.join('\r\n'));
+characterSheet = (character) => {
+    let sheet = [];
+    let hp = new RegExp("Hit Points", "g");
+    let ac = new RegExp("AC", "g");
+    let mana = new RegExp("Mana", "g");
+    let AA = new RegExp("Earned", "g");
+
+    sheet.push(`Name: ${character[0]}`, `Class: ${character[1]}`);
+    if (character[2].match(guildMatch)) { sheet.push(`Guild: ${character[2].replace(guildMatch, '<').replace(/&gt;/g, '>')}`); }
+    let statsOne = [];
+    character.forEach(ele => {
+        if (ele.match(hp)) statsOne.push(`(HP: ${ele.split(" ")[2]} |`);
+        if (ele.match(ac)) statsOne.push(`AC: ${ele.split(" ")[1]} |`);
+        if (ele.match(mana)) statsOne.push(`MANA: ${ele.split(" ")[1]})`);
+        if (ele.match(AA)) sheet.push(ele);
+    })
+    sheet.splice(sheet.length-1, 0, statsOne.join(" "));
+    return sheet;
 }
 const fomelo = (character) => {
-axios.get(`http://shardsofdalaya.com/fomelo/fomelo.php?char=${character}`)
+    async function parseCharacter(info) {
+        const result = await characterSheet(info);
+        console.log(result);
+    }
+    axios.get(`http://shardsofdalaya.com/fomelo/fomelo.php?char=${character}`)
     .then((response) => {
         if (response.status === 200) {
+            let notFound = new RegExp("Character not found", "g");
+            let result;
+            let resultArray = [];
             thing = response.data;
-            let a = thing.match(nameMatch).toString().replace(htmlStrip, ' ');
-            result = a.split(",");
-            result.forEach(element => {
-                resultArray = element.trim().split(" ").filter(word => word);
-                //element.trim().split(" ").filter(word => word);
-            });
-            console.log(resultArray);
-            //characterSheet(result);
+            if (thing.match(notFound)) { console.log("Character not found in Fomelo database."); return; }
+            else {
+                let a = thing.match(infoMatch).toString().replace(htmlStrip, ' ');
+                result = a.split(",");
+                result.forEach(element => {
+                     resultArray.push(element.trim().split(" ").filter(word => word).join(" "));
+                });
+                parseCharacter(resultArray);
+            }
         }
     }, (error) => console.log(err));
 }
 
-fomelo('miffane');
+//usage: fomelo('<character');
+fomelo('bangg');
+
