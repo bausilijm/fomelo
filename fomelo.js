@@ -3,18 +3,17 @@ Bangg's Fomelo Bot v1.0.0
 Pulls character information from the game Shards of Dalaya, parses it, and returns a character sheet.
 Primarily to be used with my discord bot.
 
-todo: parse other stats, get relic/archaic spell information, item information, kills, deaths
+todo: parse other stats, get relic/archaic spell information, item information, kills, deaths.
 */
 const axios = require('axios').default;
 const cheerio = require('cheerio');
 const fs = require('fs');
-let infoMatch = new RegExp("<tr>.+</tr>", "g");
 let htmlStrip = new RegExp("<\/?[^>]+(>|$)", "g");
-let guildMatch = new RegExp("&lt;", "g");
 
 characterSheet = (character) => {
     let sheet = [];
-    let hp = new RegExp("Hit Points", "g");
+    let guildMatch = new RegExp("&lt;", "g");
+    let hp = new RegExp("Hit Points", "g");got 
     let ac = new RegExp("AC", "g");
     let mana = new RegExp("Mana", "g");
     let AA = new RegExp("Earned", "g");
@@ -40,6 +39,7 @@ const fomelo = (character) => {
     .then((response) => {
         if (response.status === 200) {
             let notFound = new RegExp("Character not found", "g");
+            let infoMatch = new RegExp("<tr>.+</tr>", "g");
             let result;
             let resultArray = [];
             thing = response.data;
