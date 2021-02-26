@@ -13,7 +13,7 @@ let htmlStrip = new RegExp("<\/?[^>]+(>|$)", "g");
 characterSheet = (character) => {
     let sheet = [];
     let guildMatch = new RegExp("&lt;", "g");
-    let hp = new RegExp("Hit Points", "g");got 
+    let hp = new RegExp("Hit Points", "g"); 
     let ac = new RegExp("AC", "g");
     let mana = new RegExp("Mana", "g");
     let AA = new RegExp("Earned", "g");
